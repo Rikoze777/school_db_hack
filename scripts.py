@@ -1,28 +1,27 @@
+import random
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
+from datacenter.models import Lesson
+from datacenter.models import Schoolkid
+from datacenter.models import Commendation
+from datacenter.models import Subject
+from datacenter.models import Mark
+from datacenter.models import Chastisement
 
 
 def fix_marks(schoolkid):
-    from datacenter.models import Schoolkid
-    from datacenter.models import Mark
-
     try:
-        child = Schoolkid.objects.filter(full_name__contains=schoolkid)
+        child = Schoolkid.objects.get(full_name__contains=schoolkid)
     except ObjectDoesNotExist:
         print("Такой ученик отсутствует")
         return
     except MultipleObjectsReturned:
         print("Исправьте ФИО ученика")
         return
-    marks = Mark.objects.filter(schoolkid=child, points__in=[2, 3])
-    for mark in marks:
-        mark.points = 5
-        mark.save()
+    Mark.objects.filter(schoolkid__id=child.id,
+                        points__in=[2, 3]).update(points=5)
 
 
 def remove_chastisements(schoolkid):
-    from datacenter.models import Schoolkid
-    from datacenter.models import Chastisement
-
     try:
         child = Schoolkid.objects.filter(full_name__contains=schoolkid)
     except ObjectDoesNotExist:
@@ -31,17 +30,11 @@ def remove_chastisements(schoolkid):
     except MultipleObjectsReturned:
         print("Исправьте ФИО ученика")
         return
-    posts = Chastisement.objects.filter(schoolkid=child)
-    posts.delete()
+    chastisements = Chastisement.objects.filter(schoolkid=child)
+    chastisements.delete()
 
 
 def create_commendation(schoolkid, lesson):
-    import random
-    from datacenter.models import Lesson
-    from datacenter.models import Schoolkid
-    from datacenter.models import Commendation
-    from datacenter.models import Subject
-
     commendations = [
                     "Молодец!",
                     "Отлично!",
